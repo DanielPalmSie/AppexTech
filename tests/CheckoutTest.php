@@ -4,75 +4,22 @@ declare(strict_types=1);
 
 namespace App\Tests;
 
-use App\Cart;
+use App\Catalog;
 use App\Checkout;
 use App\Money;
-use App\Rules\BogofRule;
-use App\Rules\BulkPriceRule;
+use App\PricingRule\BogofRule;
+use App\PricingRule\BulkPriceRule;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \App\Checkout
- * @covers \App\Cart
+ * @covers \App\Catalog
  * @covers \App\Money
- * @covers \App\Rules\BogofRule
- * @covers \App\Rules\BulkPriceRule
+ * @covers \App\Cart
  */
 final class CheckoutTest extends TestCase
 {
-    /**
-     * @return array<string, int>
-     */
-    private function prices(): array
-    {
-        return [
-            'FR1' => 311,
-            'SR1' => 500,
-            'CF1' => 1123,
-        ];
-    }
-
-    public function testBogofEvenQuantity(): void
-    {
-        $cart = new Cart();
-        $cart->add('FR1', 2);
-
-        $discount = (new BogofRule('FR1'))->calculateDiscount($cart, $this->prices());
-
-        $this->assertSame(311, $discount->amount());
-    }
-
-    public function testBogofOddQuantity(): void
-    {
-        $cart = new Cart();
-        $cart->add('FR1', 3);
-
-        $discount = (new BogofRule('FR1'))->calculateDiscount($cart, $this->prices());
-
-        $this->assertSame(311, $discount->amount());
-    }
-
-    public function testBulkPriceBelowThreshold(): void
-    {
-        $cart = new Cart();
-        $cart->add('SR1', 2);
-
-        $discount = (new BulkPriceRule('SR1', 3, 450))->calculateDiscount($cart, $this->prices());
-
-        $this->assertSame(0, $discount->amount());
-    }
-
-    public function testBulkPriceAboveThreshold(): void
-    {
-        $cart = new Cart();
-        $cart->add('SR1', 3);
-
-        $discount = (new BulkPriceRule('SR1', 3, 450))->calculateDiscount($cart, $this->prices());
-
-        $this->assertSame(150, $discount->amount());
-    }
-
     public function testOrderIndependentScanning(): void
     {
         $rules = [
@@ -95,7 +42,7 @@ final class CheckoutTest extends TestCase
             new BulkPriceRule('SR1', 3, 450),
         ];
 
-        $checkout = new Checkout($rules, $this->prices());
+        $checkout = new Checkout($rules);
         foreach (['FR1', 'SR1', 'FR1', 'FR1', 'CF1'] as $sku) {
             $checkout->scan($sku);
         }
@@ -110,7 +57,7 @@ final class CheckoutTest extends TestCase
             new BulkPriceRule('SR1', 3, 450),
         ];
 
-        $checkout = new Checkout($rules, $this->prices());
+        $checkout = new Checkout($rules);
         $checkout->scan('FR1');
         $checkout->scan('FR1');
 
@@ -124,7 +71,7 @@ final class CheckoutTest extends TestCase
             new BulkPriceRule('SR1', 3, 450),
         ];
 
-        $checkout = new Checkout($rules, $this->prices());
+        $checkout = new Checkout($rules);
         foreach (['SR1', 'SR1', 'FR1', 'SR1'] as $sku) {
             $checkout->scan($sku);
         }
@@ -143,11 +90,19 @@ final class CheckoutTest extends TestCase
         $this->assertSame(300, $money->multiply(2)->amount());
     }
 
-    public function testUnknownSkuThrows(): void
+    public function testUnknownSkuThrowsWhenScanning(): void
     {
         $checkout = new Checkout([]);
 
         $this->expectException(InvalidArgumentException::class);
         $checkout->scan('NOPE');
+    }
+
+    public function testCatalogRejectsUnknownSku(): void
+    {
+        $catalog = new Catalog();
+
+        $this->expectException(InvalidArgumentException::class);
+        $catalog->priceFor('NOPE');
     }
 }

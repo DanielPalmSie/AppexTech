@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Rules;
+namespace App\PricingRule;
 
 use App\Cart;
+use App\Catalog;
 use App\Money;
-use App\PricingRuleInterface;
 
 /**
  * Buy-one-get-one-free rule for a specific SKU.
@@ -28,10 +28,10 @@ final class BogofRule implements PricingRuleInterface
 
     /**
      * @param Cart $cart
-     * @param array<string, int> $prices
+     * @param Catalog $catalog
      * @return Money
      */
-    public function calculateDiscount(Cart $cart, array $prices): Money
+    public function calculateDiscount(Cart $cart, Catalog $catalog): Money
     {
         $quantity = $cart->getQuantity($this->sku);
         if ($quantity < 2) {
@@ -39,6 +39,6 @@ final class BogofRule implements PricingRuleInterface
         }
 
         $freeItems = intdiv($quantity, 2);
-        return Money::fromPence($prices[$this->sku])->multiply($freeItems);
+        return $catalog->priceFor($this->sku)->multiply($freeItems);
     }
 }
