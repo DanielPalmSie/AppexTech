@@ -1,0 +1,4 @@
+Placeholder for phpunit.phar.
+
+Download phpunit.phar from https://phpunit.de/ on a machine with internet access
+and place it at tools/phpunit.phar for offline test execution.

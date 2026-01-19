@@ -36,4 +36,14 @@ final class BogofRuleTest extends TestCase
 
         $this->assertSame(311, $discount->amount());
     }
+
+    public function testBogofBelowTwoReturnsZero(): void
+    {
+        $cart = new Cart();
+        $cart->add('FR1', 1);
+
+        $discount = (new BogofRule('FR1'))->calculateDiscount($cart, new Catalog());
+
+        $this->assertSame(0, $discount->amount());
+    }
 }

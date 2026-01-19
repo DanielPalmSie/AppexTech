@@ -36,4 +36,14 @@ final class BulkPriceRuleTest extends TestCase
 
         $this->assertSame(150, $discount->amount());
     }
+
+    public function testBulkPriceNotCheaperReturnsZeroDiscount(): void
+    {
+        $cart = new Cart();
+        $cart->add('SR1', 3);
+
+        $discount = (new BulkPriceRule('SR1', 3, 600))->calculateDiscount($cart, new Catalog());
+
+        $this->assertSame(0, $discount->amount());
+    }
 }

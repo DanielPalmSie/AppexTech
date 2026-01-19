@@ -6,7 +6,6 @@ namespace App\Tests;
 
 use App\Catalog;
 use App\Checkout;
-use App\Money;
 use App\PricingRule\BogofRule;
 use App\PricingRule\BulkPriceRule;
 use InvalidArgumentException;
@@ -15,7 +14,6 @@ use PHPUnit\Framework\TestCase;
 /**
  * @covers \App\Checkout
  * @covers \App\Catalog
- * @covers \App\Money
  * @covers \App\Cart
  */
 final class CheckoutTest extends TestCase
@@ -79,15 +77,15 @@ final class CheckoutTest extends TestCase
         $this->assertSame('£16.61', $checkout->total());
     }
 
-    public function testMoneyOperationsAndFormatting(): void
+    public function testTotalMoneyUsesCustomCatalog(): void
     {
-        $money = Money::fromPence(100)->add(Money::fromPence(50));
+        $catalog = new Catalog(['TS1' => 250]);
+        $checkout = new Checkout([], $catalog);
 
-        $this->assertSame(150, $money->amount());
-        $this->assertSame('£1.50', $money->format());
-        $this->assertSame('£1.50', (string) $money);
-        $this->assertSame(100, $money->subtract(Money::fromPence(50))->amount());
-        $this->assertSame(300, $money->multiply(2)->amount());
+        $checkout->scan('TS1');
+
+        $this->assertSame(250, $checkout->totalMoney()->amount());
+        $this->assertSame('£2.50', $checkout->total());
     }
 
     public function testUnknownSkuThrowsWhenScanning(): void

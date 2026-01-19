@@ -51,9 +51,9 @@ final class Checkout
     }
 
     /**
-     * @return string Formatted total with currency symbol.
+     * @return Money
      */
-    public function total(): string
+    public function totalMoney(): Money
     {
         $total = Money::fromPence(0);
 
@@ -65,6 +65,14 @@ final class Checkout
             $total = $total->subtract($rule->calculateDiscount($this->cart, $this->catalog));
         }
 
-        return $total->format();
+        return $total;
+    }
+
+    /**
+     * @return string Formatted total with currency symbol.
+     */
+    public function total(): string
+    {
+        return $this->totalMoney()->format();
     }
 }
